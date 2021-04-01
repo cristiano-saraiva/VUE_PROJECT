@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="!loading">
     <titulo :texto="`Aluno: ${aluno.nome}`" :btnVoltar="!viwer">
       <button v-show="viwer" class="btn btn_editar" @click="editar()">
         Editar
@@ -30,19 +30,19 @@
         <tr>
           <td class="colPequeno">Data Nascimento</td>
           <td>
-            <label v-if="viwer" for="">{{ aluno.dtNasc }} </label>
-            <input v-else v-model="aluno.dtNasc" type="" />
+            <label v-if="viwer" for="">{{ aluno.dataNasc }} </label>
+            <input v-else v-model="aluno.dataNasc" type="" />
           </td>
         </tr>
         <tr>
           <td class="colPequeno">Professor:</td>
           <td>
             <label v-if="viwer" for="">{{ aluno.professor.nome }} </label>
-            <select v-else v-model="aluno.professor">
+            <select v-else v-model="aluno.professor.id">
               <option
                 v-for="(professor, index) in professores"
                 :key="index"
-                :value="professor"
+                :value="professor.id"
               >
                 {{ professor.nome }}
               </option>
@@ -72,26 +72,35 @@ export default {
       aluno: {},
       id: this.$route.params.id,
       viwer: true,
+      loading: true,
     };
   },
   created() {
-    this.$http
-      .get(
-        "http://localhost:3000/alunos/" + this.id
-      ) /* faz um get no servidor */
-      .then((res) => res.json()) /* tranformar em json */
-      .then(
-        (aluno) => (this.aluno = aluno)
-      ); /* atribuir pata parametro aluno */
-
-    this.$http
-      .get("http://localhost:3000/professores")
-      .then((res) => res.json())
-      .then((professor) => {
-        this.professores = professor;
-      });
+    this.carregarProfessor();
   },
   methods: {
+    carregarProfessor() {
+      this.$http
+        .get("http://localhost:5000/api/professor")
+        .then((res) => res.json())
+        .then((professor) => {
+          this.professores = professor;
+          this.carregarAluno();
+        });
+    },
+
+    carregarAluno() {
+      this.$http
+        .get(
+          `http://localhost:5000/api/aluno/${this.id}`
+        ) /* faz um get no servidor */
+        .then((res) => res.json()) /* tranformar em json */
+        .then(aluno=>{
+            this.aluno = aluno;
+            this.loading = false;
+        }); /* atribuir pata parametro aluno */
+    },
+
     editar() {
       this.viwer = !this.viwer;
     },
@@ -100,16 +109,18 @@ export default {
         id: _aluno.id,
         nome: _aluno.nome,
         sobrenome: _aluno.sobrenome,
-        dtNasc: _aluno.dtNasc,
-        professor: _aluno.professor,
+        dataNasc: _aluno.dataNasc,
+        professorId: _aluno.professor.id,
       };
-      this.$http.put(
-        `http://localhost:3000/alunos/${_alunoEdit.id}`,
-        _alunoEdit
-      );
+      this.$http
+        .put(`http://localhost:5000/api/aluno/${_alunoEdit.id}`, _alunoEdit)
+        .then((res) => res.json())
+        .then((_aluno => this.aluno = _aluno))
+        .then(() => this.viwer = true);
+
       this.viwer = !this.viwer;
     },
-    
+
     cancelar() {
       this.viwer = !this.viwer;
     },

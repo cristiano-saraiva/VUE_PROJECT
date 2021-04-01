@@ -27,7 +27,11 @@
       <tbody v-if="alunos.length">
         <tr v-for="(aluno, index) in alunos" :key="index">
           <td class="colPequeno">{{ aluno.id }}</td>
-          <router-link :to="`/alunoDetalhe/${aluno.id}`" tag="td" style="cursor: pointer;">
+          <router-link
+            :to="`/alunoDetalhe/${aluno.id}`"
+            tag="td"
+            style="cursor: pointer"
+          >
             {{ aluno.nome }} {{ aluno.sobrenome }}
           </router-link>
 
@@ -39,7 +43,9 @@
         </tr>
       </tbody>
       <tfoot v-else>
-        Nenhum Aluno encontrado
+        <tr>
+          <td colspan="3" style="text-align: center"><h5>Nenhum Aluno encontrado</h5></td>
+        </tr>
       </tfoot>
     </table>
   </div>
@@ -64,12 +70,12 @@ export default {
     if (this.professor_id) {
       this.carregarProfessores();
       this.$http
-        .get("http://localhost:3000/alunos?professor.id=" + this.professor_id)
+        .get(`http://localhost:5000/api/aluno/ByProfessor/${this.professor_id}`)
         .then((res) => res.json())
         .then((alunos) => (this.alunos = alunos));
     } else {
       this.$http
-        .get("http://localhost:3000/alunos")
+        .get("http://localhost:5000/api/aluno")
         .then((res) => res.json())
         .then((alunos) => (this.alunos = alunos));
     }
@@ -80,14 +86,13 @@ export default {
       let _aluno = {
         nome: this.nome,
         sobrenome: "",
-        professor: {
-          id: this.professor.id,
-          nome: this.professor.nome,
-        },
+        dataNasc: "",
+        professorId: this.professor.id,
+
       };
 
       this.$http
-        .post("http://localhost:3000/alunos", _aluno)
+        .post("http://localhost:5000/api/aluno", _aluno)
         .then((res) => res.json())
         .then((getAluno) => {
           this.alunos.push(getAluno);
@@ -95,14 +100,14 @@ export default {
         });
     },
     remover(aluno) {
-      this.$http.delete(`http://localhost:3000/alunos/${aluno.id}`).then(() => {
+      this.$http.delete(`http://localhost:5000/api/aluno/${aluno.id}`).then(() => {
         let indice = this.alunos.indexOf(aluno);
         this.alunos.splice(indice, 1);
       });
     },
     carregarProfessores() {
       this.$http
-        .get(`http://localhost:3000/professores/${this.professor_id}`)
+        .get(`http://localhost:5000/api/professor/${this.professor_id}`)
         .then((res) => res.json())
         .then((professor) => {
           this.professor = professor;
